@@ -80,19 +80,56 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _sidesAnimationController;
+  late Animation _sidesAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _sidesAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    );
+
+    _sidesAnimation =
+        IntTween(begin: 3, end: 10).animate(_sidesAnimationController);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sidesAnimationController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _sidesAnimationController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF373D20),
       body: Center(
-        child: CustomPaint(
-          painter: Polygon(sides: 3),
-          child: SizedBox(
-            width: MediaQuery.sizeOf(context).width,
-            height: MediaQuery.sizeOf(context).width,
-          ),
-        ),
+        child: AnimatedBuilder(
+            animation: Listenable.merge(
+              [
+                _sidesAnimationController,
+              ],
+            ),
+            builder: (context, child) {
+              return CustomPaint(
+                painter: Polygon(sides: _sidesAnimation.value),
+                child: SizedBox(
+                  width: MediaQuery.sizeOf(context).width,
+                  height: MediaQuery.sizeOf(context).width,
+                ),
+              );
+            }),
       ),
     );
   }
