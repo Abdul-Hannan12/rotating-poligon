@@ -80,10 +80,13 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _sidesAnimationController;
+  late AnimationController _radiusAnimationController;
+  late AnimationController _rotationAnimationController;
   late Animation _sidesAnimation;
+  late Animation _radiusAnimation;
+  late Animation _rotationAnimation;
 
   @override
   void initState() {
@@ -96,18 +99,44 @@ class _HomePageState extends State<HomePage>
 
     _sidesAnimation =
         IntTween(begin: 3, end: 10).animate(_sidesAnimationController);
+
+    _radiusAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    );
+
+    _radiusAnimation = Tween<double>(begin: 20, end: 400)
+        .chain(
+          CurveTween(curve: Curves.bounceInOut),
+        )
+        .animate(_sidesAnimationController);
+
+    _rotationAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    );
+
+    _rotationAnimation = Tween<double>(begin: 0, end: 2 * pi)
+        .chain(
+          CurveTween(curve: Curves.easeInOut),
+        )
+        .animate(_rotationAnimationController);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _sidesAnimationController.repeat(reverse: true);
+    _radiusAnimationController.repeat(reverse: true);
+    _rotationAnimationController.repeat(reverse: true);
   }
 
   @override
   void dispose() {
     super.dispose();
     _sidesAnimationController.dispose();
+    _radiusAnimationController.dispose();
+    _rotationAnimationController.dispose();
   }
 
   @override
@@ -119,14 +148,22 @@ class _HomePageState extends State<HomePage>
             animation: Listenable.merge(
               [
                 _sidesAnimationController,
+                _radiusAnimationController,
               ],
             ),
             builder: (context, child) {
-              return CustomPaint(
-                painter: Polygon(sides: _sidesAnimation.value),
-                child: SizedBox(
-                  width: MediaQuery.sizeOf(context).width,
-                  height: MediaQuery.sizeOf(context).width,
+              return Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.identity()
+                  ..rotateX(_rotationAnimation.value)
+                  ..rotateY(_rotationAnimation.value)
+                  ..rotateZ(_rotationAnimation.value),
+                child: CustomPaint(
+                  painter: Polygon(sides: _sidesAnimation.value),
+                  child: SizedBox(
+                    width: _radiusAnimation.value,
+                    height: _radiusAnimation.value,
+                  ),
                 ),
               );
             }),
